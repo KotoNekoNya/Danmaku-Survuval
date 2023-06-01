@@ -14,6 +14,11 @@ public class PlayerController : Entity
 
     public Weapon[] Weapons;
 
+    public GameObject gameOverMenu;
+
+    private bool isAlive = true;
+    private bool isGameOver = false;
+
     private void Awake()
     {
         main = this;
@@ -21,6 +26,11 @@ public class PlayerController : Entity
 
     void Update()
     {
+        if (isGameOver)
+            return;
+        if (!isAlive)
+            return;
+
         moveAmount += new Vector3(Input.GetAxisRaw("Horizontal") * Time.deltaTime * MovementSpeed, Input.GetAxisRaw("Vertical") * Time.deltaTime * MovementSpeed, 0);
         Vector3 moveDiff = moveAmount * Time.deltaTime * 8;
         transform.position += moveDiff;
@@ -42,8 +52,12 @@ public class PlayerController : Entity
 
     public override void Die()
     {
-        base.Die();
-        UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex);
+        if (isGameOver)
+            return;
+
+        isGameOver = true;
+        gameOverMenu.SetActive(true);
+        Time.timeScale = 0; // Останавливаем время в игре
     }
 
     private void OnTriggerEnter2D(Collider2D collision)

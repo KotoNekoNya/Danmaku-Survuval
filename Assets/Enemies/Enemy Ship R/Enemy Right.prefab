@@ -98,7 +98,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f69d624023cec944ad1bd2959845bd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  HP: 5
+  HP: 15
   DeathSound: {fileID: 8300000, guid: 26b7f417e0d397c4e8431c0a5b93b777, type: 3}
   DeathVolume: 0.1
   IsDead: 0

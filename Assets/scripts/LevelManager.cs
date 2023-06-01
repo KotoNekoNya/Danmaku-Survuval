@@ -10,28 +10,33 @@ public class LevelManager : MonoBehaviour
     public Enemy ShooterEnemyRight;
     public Enemy ShooterSideScroller;
 
+    public float initialSpawnDelay = 3.5f;
+    public float enemySpeedIncrease = 0.1f;
 
+    private float currentSpawnDelay;
 
     public void Start()
     {
+        currentSpawnDelay = initialSpawnDelay;
         StartCoroutine(SpawnEnemies());
     }
 
     public IEnumerator SpawnEnemies()
     {
-        yield return new WaitForSeconds(3.5f);
-        StartCoroutine(SpawnSimple(SimpleEnemy, 0.2f, 10));
-        yield return new WaitForSeconds(2.5f);
-        StartCoroutine(SpawnSimple(SimpleEnemyOpposite, 0.2f, 10));
-        yield return new WaitForSeconds(2.5f);
-        StartCoroutine(SpawnSimple(SimpleEnemy, 0.2f, 10));
-        yield return new WaitForSeconds(0.1f);
-        StartCoroutine(SpawnSimple(SimpleEnemyOpposite, 0.2f, 10));
-        yield return StartSequence();
-
-        yield return StartSequence();
-
-        yield return StartSequence();
+        while (true)
+        {
+            yield return new WaitForSeconds(3.5f);
+            StartCoroutine(SpawnSimple(SimpleEnemy, 0.2f, 10));
+            yield return new WaitForSeconds(2.5f);
+            StartCoroutine(SpawnSimple(SimpleEnemyOpposite, 0.2f, 10));
+            yield return new WaitForSeconds(2.5f);
+            StartCoroutine(SpawnSimple(SimpleEnemy, 0.2f, 10));
+            yield return new WaitForSeconds(0.1f);
+            StartCoroutine(SpawnSimple(SimpleEnemyOpposite, 0.2f, 10));
+            yield return StartSequence();
+            // Увеличиваем скорость спавна врагов
+            currentSpawnDelay -= enemySpeedIncrease;
+        }
     }
 
     public IEnumerator StartSequence()
@@ -60,16 +65,14 @@ public class LevelManager : MonoBehaviour
         StartCoroutine(SpawnSimple(SimpleEnemyOpposite, 0.2f, 10));
         StartCoroutine(SpawnSimple(ShooterEnemyRight, 0.2f, 1));
         StartCoroutine(SpawnSimple(ShooterSideScroller, 0.4f, 3));
-
     }
-
 
     public IEnumerator SpawnSimple(Enemy enemy, float wait, int amount)
     {
         for (int t = 0; t < amount; t++)
         {
             yield return new WaitForSeconds(wait);
-            Instantiate(enemy);
+            Instantiate(enemy.gameObject);
         }
     }
 }
