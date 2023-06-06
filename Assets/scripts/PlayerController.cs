@@ -5,7 +5,7 @@ using UnityEngine;
 public class PlayerController : Entity
 {
     public float MovementSpeed = 1;
-    public float HorizontalBorder = 4.0f;
+    public float HorizontalBorder = 2.6f;
     public float VerticalBorder = 4.0f;
 
     public static PlayerController main;
@@ -19,6 +19,10 @@ public class PlayerController : Entity
     private bool isAlive = true;
     private bool isGameOver = false;
 
+    private Vector3 touchStartPosition; // Позиция начала касания
+    private Vector3 touchEndPosition; // Позиция окончания касания
+    private bool isTouching = false; // Флаг для отслеживания касания
+
     private void Awake()
     {
         main = this;
@@ -31,16 +35,48 @@ public class PlayerController : Entity
         if (!isAlive)
             return;
 
-        moveAmount += new Vector3(Input.GetAxisRaw("Horizontal") * Time.deltaTime * MovementSpeed, Input.GetAxisRaw("Vertical") * Time.deltaTime * MovementSpeed, 0);
-        Vector3 moveDiff = moveAmount * Time.deltaTime * 8;
-        transform.position += moveDiff;
-        moveAmount -= moveDiff;
+        // Отслеживаем касания на экране
+        if (Input.touchCount > 0)
+        {
+            Touch touch = Input.GetTouch(0);
 
-        if (transform.position.x < -HorizontalBorder) transform.position = new Vector3(-HorizontalBorder, transform.position.y, transform.position.z);
-        if (transform.position.x > HorizontalBorder) transform.position = new Vector3(HorizontalBorder, transform.position.y, transform.position.z);
-        if (transform.position.y < -VerticalBorder) transform.position = new Vector3(transform.position.x, - VerticalBorder, transform.position.z);
-        if (transform.position.y > VerticalBorder) transform.position = new Vector3(transform.position.x, VerticalBorder, transform.position.z);
+            if (touch.phase == TouchPhase.Began)
+            {
+                touchStartPosition = touch.position;
+                isTouching = true;
+            }
+            else if (touch.phase == TouchPhase.Moved)
+            {
+                touchEndPosition = touch.position;
+                Vector3 touchDelta = touchEndPosition - touchStartPosition;
+                moveAmount = new Vector3(touchDelta.x, touchDelta.y, 0);
+            }
+            else if (touch.phase == TouchPhase.Ended)
+            {
+                isTouching = false;
+                moveAmount = Vector3.zero;
+            }
+        }
+        else
+        {
+            isTouching = false;
+            moveAmount = Vector3.zero;
+        }
 
+        // Нормализуем вектор направления движения
+        moveAmount.Normalize();
+
+        // Перемещаем персонаж на основе вектора движения и скорости
+        transform.position += moveAmount * Time.deltaTime * MovementSpeed;
+
+        // Ограничиваем персонажа в пределах границ
+        transform.position = new Vector3(
+            Mathf.Clamp(transform.position.x, -HorizontalBorder, HorizontalBorder),
+            Mathf.Clamp(transform.position.y, -VerticalBorder, VerticalBorder),
+            transform.position.z
+        );
+
+        // Выполняем огонь оружия после определенного времени
         if (Time.timeSinceLevelLoad > 2.0f)
         {
             foreach (Weapon weapon in Weapons)
