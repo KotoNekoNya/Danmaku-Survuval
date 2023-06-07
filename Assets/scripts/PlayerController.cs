@@ -19,8 +19,7 @@ public class PlayerController : Entity
     private bool isAlive = true;
     private bool isGameOver = false;
 
-    private Vector3 touchStartPosition; // Позиция начала касания
-    private Vector3 touchEndPosition; // Позиция окончания касания
+    private Vector3 touchPosition; // Позиция касания
     private bool isTouching = false; // Флаг для отслеживания касания
 
     private void Awake()
@@ -42,14 +41,11 @@ public class PlayerController : Entity
 
             if (touch.phase == TouchPhase.Began)
             {
-                touchStartPosition = touch.position;
                 isTouching = true;
             }
-            else if (touch.phase == TouchPhase.Moved)
+            else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
             {
-                touchEndPosition = touch.position;
-                Vector3 touchDelta = touchEndPosition - touchStartPosition;
-                moveAmount = new Vector3(touchDelta.x, touchDelta.y, 0);
+                touchPosition = touch.position;
             }
             else if (touch.phase == TouchPhase.Ended)
             {
@@ -63,18 +59,27 @@ public class PlayerController : Entity
             moveAmount = Vector3.zero;
         }
 
-        // Нормализуем вектор направления движения
+        // Конвертируем позицию касания в мировые координаты
+        Vector3 touchWorldPosition = Camera.main.ScreenToWorldPoint(touchPosition);
+        touchWorldPosition.z = transform.position.z;
+
+        // Рассчитываем вектор направления движения
+        moveAmount = touchWorldPosition - transform.position;
         moveAmount.Normalize();
 
-        // Перемещаем персонаж на основе вектора движения и скорости
-        transform.position += moveAmount * Time.deltaTime * MovementSpeed;
+        // Перемещаем персонаж только при касании
+        if (isTouching)
+        {
+            // Перемещаем персонаж на основе вектора движения и скорости
+            transform.position += moveAmount * Time.deltaTime * MovementSpeed;
 
-        // Ограничиваем персонажа в пределах границ
-        transform.position = new Vector3(
-            Mathf.Clamp(transform.position.x, -HorizontalBorder, HorizontalBorder),
-            Mathf.Clamp(transform.position.y, -VerticalBorder, VerticalBorder),
-            transform.position.z
-        );
+            // Ограничиваем персонажа в пределах границ
+            transform.position = new Vector3(
+                Mathf.Clamp(transform.position.x, -HorizontalBorder, HorizontalBorder),
+                Mathf.Clamp(transform.position.y, -VerticalBorder, VerticalBorder),
+                transform.position.z
+            );
+        }
 
         // Выполняем огонь оружия после определенного времени
         if (Time.timeSinceLevelLoad > 2.0f)
